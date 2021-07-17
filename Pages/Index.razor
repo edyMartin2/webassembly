@@ -1,0 +1,82 @@
+@page "/"
+@using System.Net.Http.Json
+@inject IHttpClientFactory ClientFactory
+@inject HttpClient Http
+
+
+<h1>Call web API from a Blazor Server Razor component</h1>
+
+@if (@Pok != null)
+{
+    @for (int i = 0; i < @Pok.Count; i++)
+    {
+        @for (int p = 0 ; p < @Pok[i].results.Count; p++)
+        {
+            var name = @Pok[i].results[p].name;
+            <p> @name <button @onclick="@(e => getPok(@name) )">Click</button></p>
+        }
+    }
+} else{
+    <p>Sin datos</p>
+}
+
+<p>Poder del pokemon @pokemonGet </p>
+@if (@PokOne != null)
+{
+    @for (int i = 0; i < PokOne.Count ; i++)
+    {
+        <p>@PokOne[i].weight</p>
+    }
+}
+
+@code {
+
+    public List<Pokemon>  Pok;
+    public List<OnePok>  PokOne;
+    public Pokemon pl;
+    public OnePok  Pok2;
+
+    public String pokemonGet  = "";
+    protected override async Task OnInitializedAsync()
+
+    {
+       var url = "https://pokeapi.co/api/v2/pokemon/";
+       var json = await Http.GetAsync(url);
+
+
+       if (json.IsSuccessStatusCode)
+       {
+            HttpResponseMessage message = await Http.GetAsync(url); //obtenemos respuesta de url
+            pl = await message.Content.ReadFromJsonAsync<Pokemon>(); //sacamos su contenido como un res.data en json
+            Pok = new List<Pokemon>(new Pokemon[] { pl });
+       }
+    }
+
+
+    @* Obtenemos todas las  *@
+    public class Pokemon{
+       public List<Poks> results {get;set;}
+    }
+
+    public class Poks {
+        public String name {get; set;}
+    }
+
+    private  async void  getPok(string name){
+        pokemonGet = name;
+        var url = "https://pokeapi.co/api/v2/pokemon/" + name;
+        var json = await Http.GetAsync(url);
+
+        if (json.IsSuccessStatusCode)
+        {
+            HttpResponseMessage message = await Http.GetAsync(url); //obtenemos respuesta de url
+            Pok2 = await message.Content.ReadFromJsonAsync<OnePok>(); //sacamos su contenido como un res.data en json
+            PokOne = new List<OnePok>(new OnePok[] { Pok2 });
+        }
+    }
+
+    public class OnePok{
+        public int weight {get; set;}
+    }
+
+}
